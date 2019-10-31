@@ -5,6 +5,15 @@ import java.util.Vector;
 // The following part should be completed by students.
 // Students can modify anything except the class name and exisiting functions and varibles.
 
+
+
+
+//during the recursion when predicting the move of the opponent,
+// our ai will predict that the opponent will choose a move that makes them be the ones winning
+
+//our ai will try and choose the move that will put us in the lead 7 turns later(so it might bait the opponent and stuff idk)
+//but if you have a better idea let me know idk I just thought this would be really good and not so hard to do
+
 public class StudentAI extends AI {
     public class Node{
         Board currentBoard; //current state of board
