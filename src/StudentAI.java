@@ -27,7 +27,8 @@ public class StudentAI extends AI {
     //how to choose next move using recurrsion 
     public Move chooseMove(Node curr){
         //Move decision;
-        
+
+        System.out.println("move?");
         curr.currentPossibleMoves = curr.currentBoard.getAllPossibleMoves(curr.playersMove);
         Iterator<Vector<Move>> temp = curr.currentPossibleMoves.iterator();
         
