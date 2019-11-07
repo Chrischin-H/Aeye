@@ -9,7 +9,7 @@ import java.util.Vector;
 
 
 //during the recursion when predicting the move of the opponent,
-// our ai will predict that the opponent will choose a move that makes them be the ones winning
+//our ai will predict that the opponent will choose a move that makes them be the ones winning
 
 //our ai will try and choose the move that will put us in the lead 7 turns later(so it might bait the opponent and stuff idk)
 //but if you have a better idea let me know idk I just thought this would be really good and not so hard to do
@@ -31,11 +31,11 @@ public class StudentAI extends AI {
         curr.currentPossibleMoves = curr.currentBoard.getAllPossibleMoves(curr.playersMove);
         Iterator<Vector<Move>> temp = curr.currentPossibleMoves.iterator();
         
-        while(temp.hasNext()){// iterates tthrough all the vectors in curr.currentPossibleMoves
+        while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
             Iterator<Move> tempMoves = temp.next().iterator();
             while(tempMoves.hasNext()){ // iterates through elements inside the vector that the first iterator gave
                 
-            } 
+            }
             curr.currentBoard = new Board(this.board); //reset to the current board after going through possible moves of one checker
         }
 
@@ -61,7 +61,40 @@ public class StudentAI extends AI {
         }
         else{
             player = 1; // should only come here if its first move of game, therfore default first move http://www.quadibloc.com/other/bo1211.htm
-            return ; //hard code default first move, easier to just do here instead of making a fn to be used only once
+
+            int col;  //initial col
+            int row;  //initial row
+            int newcol; //new col
+            int newrow; //new row
+            boolean even = true; //see if number of row occupied is even or odd
+            if((board.p % 2) != 0)
+            {
+                even = false;
+            }
+
+            if(even) //if even, we move one in the middle to next row and col -1
+            {
+                col = board.col/2;
+                row = board.p-1;
+                newcol = board.col/2 + -1;
+                newrow = board.p;
+            }
+            else // if odd, we move one in the middle to next row and col +1
+            {
+                col = board.col/2 -1 ;
+                row = board.p-1;
+                newcol = board.col/2;
+                newrow = board.p;
+            }
+
+            Move firstmove = new Move("("+row+","+col +")"+"-"+"("+newrow+","+newcol +")"); // make first move
+
+            return firstmove; //hard code default first move, easier to just do here instead of making a fn to be used only once
+            /*
+            bascically since very front checkers are placed at odd columns if p(row occupied) is odd
+            and even columns  if p is even. So we have to figure out whether p is odd or even
+             and choose which one is in the middle and make first move accordingly.
+             */
         }
         /*Vector<Vector<Move>> moves = board.getAllPossibleMoves(player);
         Random randGen = new Random();
