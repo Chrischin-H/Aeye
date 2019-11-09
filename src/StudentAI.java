@@ -38,11 +38,11 @@ public class StudentAI extends AI {
         Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
         
         while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
-            var tmI = temp.next();
+            Vector<Move> tmI = temp.next();
             Iterator<Move> tempMoves = tmI.iterator();
             
             while(tempMoves.hasNext()){ // iterates through elements inside the vector that the first iterator gave
-                var tmJ = tempMoves.next();
+                Move tmJ = tempMoves.next();
                 if(curr.trueplayersmove == currplayersMove){//our moves
                     
                     try{
