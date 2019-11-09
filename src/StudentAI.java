@@ -183,7 +183,7 @@ public class StudentAI extends AI {
         Game.j = 0;
         Game.GameScore = gamescore(this.board, this.player);
         Game.MakeMove = false;
-        Game.depthMax = 7; //depth Max of recurrsion --> really pushing it with 7 but we can just adjust here in one location 
+        Game.depthMax = 3; //depth Max of recurrsion --> really pushing it with 7 but we can just adjust here in one location 
         //Game.currentBoard = new Board(this.board); //creates the current node 
         Move temp = chooseMove(Game, 0, new Board(this.board), this.player);
         this.board.makeMove(temp, player);
