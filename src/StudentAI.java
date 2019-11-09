@@ -16,36 +16,105 @@ import java.util.Vector;
 
 public class StudentAI extends AI {
     public class Node{
-        Board currentBoard; //current state of board
-        Vector<Vector<Move>> currentPossibleMoves; //current possible moves for player's turn
+       // Board currentBoard; //current state of board
+        //Vector<Vector<Move>> currentPossibleMoves; //current possible moves for player's turn
         int GameScore; // game score at the end of each recurrsion: [currPlayer # of pieces ] - [Opponent # pieces] --> use absolute value of GameScore to decide which move to go with 
-        int depth; // the current depth, [depth  += 1] ---> once each player has made a move in the tree and resets after each iteration of currentPossibleMoves in the root node  
-        int depthMax; // max depth of recurssion 
-        //Boolean MakeMove;
-        int playersMove;
+        //int depth; // the current depth, [depth  += 1] ---> once each player has made a move in the tree and resets after each iteration of currentPossibleMoves in the root node  
+        int depthMax; // max depth of recurssion
+        int i; //keeps track of which 
+        int j; 
+        Boolean MakeMove;
+        //int currplayersMove; // keeps track of whos turn 
+        int trueplayersmove; // Aeye true player#
     }
     //how to choose next move using recurrsion 
-    public Move chooseMove(Node curr){
+    public Move chooseMove(Node curr, int depth, Board currBoard, int currplayersMove){
         //Move decision;
 
         System.out.println("move?");
-        curr.currentPossibleMoves = curr.currentBoard.getAllPossibleMoves(curr.playersMove);
-        Iterator<Vector<Move>> temp = curr.currentPossibleMoves.iterator();
+
+
+        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(currplayersMove); //gets all moves of current player's
+        Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
         
         while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
-            Iterator<Move> tempMoves = temp.next().iterator();
+            var tmI = temp.next();
+            Iterator<Move> tempMoves = tmI.iterator();
+            
             while(tempMoves.hasNext()){ // iterates through elements inside the vector that the first iterator gave
-                
+                var tmJ = tempMoves.next();
+                if(curr.trueplayersmove == currplayersMove){//our moves
+                    
+                    try{
+
+                        Board tempB = new Board(currBoard);
+                        tempB.makeMove(tmJ,currplayersMove);
+                        if(currplayersMove == 2){
+
+                            chooseMove(curr,depth,tempB,1);
+                        }
+                        else{
+                            chooseMove(curr,depth,tempB,2);
+                        }
+
+
+                    }
+                    catch(Exception e){}
+                }
+                else{
+                    try{
+
+                        Board tempB = new Board(currBoard);
+                        tempB.makeMove(tmJ,currplayersMove);
+                       
+                        if(depth != curr.depthMax){
+                            if(currplayersMove == 2){
+
+                                chooseMove(curr,depth + 1,tempB,1);
+                            }
+                            else{
+                                chooseMove(curr,depth + 1,tempB,2);
+                            }
+                        }
+                        else{
+                            int tempGS = gamescore(tempB, curr.trueplayersmove);
+                            if(tempGS > curr.GameScore){
+                                curr.GameScore = tempGS;
+                                curr.MakeMove = true;
+                            }
+                        }
+
+
+                    }
+                    catch(Exception e){}
+                    
+                }
+
+                if(curr.MakeMove && depth == 0){
+                    
+                    curr.i = currentPossibleMoves.indexOf(tmI);
+                    curr.j = currentPossibleMoves.get(curr.i).indexOf(tmJ);
+                    curr.MakeMove = false;
+                }
+
             }
-            curr.currentBoard = new Board(this.board); //reset to the current board after going through possible moves of one checker
+            
         }
 
         
-        return (curr.currentPossibleMoves.get(0)).get(0); //for now will change later
+        return (currentPossibleMoves.get(curr.i)).get(curr.j);
     }
 
-    public int gamescore(Node curr){
-        return 0;
+    public int gamescore(Board curr, int player){
+        int temp = 0;
+        if(player == 1){
+            temp = curr.blackCount - curr.whiteCount;
+        }
+        else{
+            temp = curr.whiteCount - curr.blackCount;
+        }
+        
+        return temp;
     }
 
     public StudentAI(int col, int row, int k) throws InvalidParameterError {
@@ -59,6 +128,7 @@ public class StudentAI extends AI {
     public Move GetMove(Move move) throws InvalidMoveError {
         if (!move.seq.isEmpty()){
             board.makeMove(move, (player == 1) ? 2 : 1);// updates opponents turn/move and update current game state
+
         }
         else{
             player = 1; // should only come here if its first move of game, therfore default first move http://www.quadibloc.com/other/bo1211.htm
@@ -97,6 +167,7 @@ public class StudentAI extends AI {
              and choose which one is in the middle and make first move accordingly.
              */
         }
+
         /*Vector<Vector<Move>> moves = board.getAllPossibleMoves(player);
         Random randGen = new Random();
         int index = randGen.nextInt(moves.size());
@@ -104,11 +175,17 @@ public class StudentAI extends AI {
         Move resMove = moves.get(index).get(innerIndex);
         board.makeMove(resMove, player);
         */
+        
         Node Game = new Node(); 
-        Game.playersMove = this.player; //tells node if youre 1st or 2nd player
+         //tells node if youre 1st or 2nd player
+        Game.trueplayersmove = this.player;
+        Game.i = 0;
+        Game.j = 0;
+        Game.GameScore = gamescore(this.board, this.player);
+        Game.MakeMove = false;
         Game.depthMax = 7; //depth Max of recurrsion --> really pushing it with 7 but we can just adjust here in one location 
-        Game.currentBoard = new Board(this.board); //creates the current node 
-        Move temp = chooseMove(Game);
+        //Game.currentBoard = new Board(this.board); //creates the current node 
+        Move temp = chooseMove(Game, 0, new Board(this.board), this.player);
         this.board.makeMove(temp, player);
         return temp;
     }
