@@ -1,7 +1,6 @@
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Vector;
-import java.util.ArrayList;
 
 // The following part should be completed by students.
 // Students can modify anything except the class name and exisiting functions and varibles.
@@ -28,151 +27,82 @@ public class StudentAI extends AI {
         //int currplayersMove; // keeps track of whos turn
         int trueplayersmove; // Aeye true player#
     }
-    public class Heuristic
-    {
-        int i;
-        int j;
-        double score;
-
-        public Heuristic (int i, int j, double score)
-        {
-            this.i = i;
-            this.j = j;
-            this.score = score;
-        }
-        public double getscore()
-        {
-            return this.score;
-        }
-        public int geti()
-        {
-            return this.i;
-        }
-        public int getj()
-        {
-            return this.j;
-        }
-        public String toString()
-        {
-            String str = new String();
-            str += "i = ";
-            str += this.i;
-            str += ", j = ";
-            str += this.j;
-            str += ", score = ";
-            str += this.score;
-
-            return str;
-
-        }
-    }
-    public int nextPlayer(int i)
-    {
-        if(i == 1)
-        {
-            return 2;
-        }
-        else
-        {
-            return 1;
-        }
-    }
     //how to choose next move using recurrsion
-    public Move chooseMove(int depth, Board currBoard, int player){
+    public Move chooseMove(Node curr, int depth, Board currBoard, int currplayersMove){
         //Move decision;
-        ArrayList<Heuristic> H = new ArrayList<Heuristic>();
-        int i= 0;
-        int j= 0;
-        int best = 0;
-        boolean max = true;
 
-        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player); //gets all moves of current player's
+
+        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(currplayersMove); //gets all moves of current player's
         Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
 
         while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
-            Vector<Move> tmi = temp.next();
-            Iterator<Move> tempMoves = tmi.iterator();
-            while(tempMoves.hasNext())
-            {
-                Move tmj = tempMoves.next();
-                Board tempB = new Board(currBoard);
-                try
-                {
-                    tempB.makeMove(tmj, player);
-                    Heuristic newH = new Heuristic(i ,j, minimax(tempB, depth-1, nextPlayer(player), !max));
-                    H.add(newH);
-                }
-                catch(Exception e){}
-                j++;
-            }
-            i++;
-        }
+            Vector<Move> tmI = temp.next();
+            Iterator<Move> tempMoves = tmI.iterator();
 
-        for(int index = 0 ; index < H.size(); index++)
-        {
-           // System.out.println(H.get(index).toString());
-            if(H.get(index).getscore() > H.get(best).getscore())
-            {
-                best = index;
-            }
-        }
+            while(tempMoves.hasNext()){ // iterates through elements inside the vector that the first iterator gave
+                Move tmJ = tempMoves.next();
+                if(curr.trueplayersmove == currplayersMove){//our moves
 
-        return (currentPossibleMoves.get(H.get(best).geti())).get(H.get(best).getj());
-    }
-
-    public double minimax(Board currBoard, int depth, int player, boolean max)
-    {
-        if(depth == 0)
-        {
-            return gamescore(currBoard, player);
-        }
-        double output = 0;
-        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player);
-        Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
-
-        if(max)
-        {
-            while(temp.hasNext())
-            {
-                Vector<Move> tmI = temp.next();
-                Iterator<Move> tempMoves = tmI.iterator();
-
-                while(tempMoves.hasNext())
-                { // iterates through elements inside the vector that the first iterator gave
-                    Move tmJ = tempMoves.next();
-                    Board tempB = new Board(currBoard);
-                    try {
-                        tempB.makeMove(tmJ, player);
-                    }
-                    catch(Exception e){}
-                    double result = minimax(tempB, depth -1, nextPlayer(player), !max);
-                    output = Math.max(result, output);
-                }
-            }
-        }
-        else
-        {
-            while(temp.hasNext())
-            {
-                Vector<Move> tmI = temp.next();
-                Iterator<Move> tempMoves = tmI.iterator();
-
-                while(tempMoves.hasNext())
-                { // iterates through elements inside the vector that the first iterator gave
-                    Move tmJ = tempMoves.next();
-                    Board tempB = new Board(currBoard);
                     try{
-                        tempB.makeMove(tmJ, player);
+
+                        Board tempB = new Board(currBoard);
+                        tempB.makeMove(tmJ,currplayersMove);
+                        if(currplayersMove == 2){
+
+                            chooseMove(curr,depth+1,tempB,1);
+                        }
+                        else{
+                            chooseMove(curr,depth+1,tempB,2);
+                        }
+
 
                     }
                     catch(Exception e){}
-                    double result = minimax(tempB, depth -1, nextPlayer(player), !max);
-                    output = Math.min(result, output);
                 }
+                else{
+                    try{
+
+                        Board tempB = new Board(currBoard);
+                        tempB.makeMove(tmJ,currplayersMove);
+
+                        if(depth != curr.depthMax){
+                            if(currplayersMove == 2){
+
+                                chooseMove(curr,depth + 1,tempB,1);
+                            }
+                            else{
+                                chooseMove(curr,depth + 1,tempB,2);
+                            }
+                        }
+                        else{
+                            int tempGS = gamescore(tempB, curr.trueplayersmove);
+                            if(tempGS > curr.GameScore){
+                                curr.GameScore = tempGS;
+                                curr.MakeMove = true;
+                            }
+                        }
+
+
+                    }
+                    catch(Exception e){}
+
+                }
+
+                if(curr.MakeMove && depth == 0){
+
+                    curr.i = currentPossibleMoves.indexOf(tmI);
+                    curr.j = currentPossibleMoves.get(curr.i).indexOf(tmJ);
+                    curr.MakeMove = false;
+                }
+
             }
+
         }
-        return output;
+
+
+        return (currentPossibleMoves.get(curr.i)).get(curr.j);
     }
+
 
     public int gamescore(Board curr, int player){
         int temp = 0;
@@ -237,7 +167,14 @@ public class StudentAI extends AI {
              */
         }
 
-        /*
+        /*Vector<Vector<Move>> moves = board.getAllPossibleMoves(player);
+        Random randGen = new Random();
+        int index = randGen.nextInt(moves.size());
+        int innerIndex = randGen.nextInt(moves.get(index).size());
+        Move resMove = moves.get(index).get(innerIndex);
+        board.makeMove(resMove, player);
+        */
+
         Node Game = new Node();
         //tells node if youre 1st or 2nd player
         Game.trueplayersmove = this.player;
@@ -248,9 +185,6 @@ public class StudentAI extends AI {
         Game.depthMax = 3; //depth Max of recurrsion --> really pushing it with 7 but we can just adjust here in one location
         //Game.currentBoard = new Board(this.board); //creates the current node
         Move temp = chooseMove(Game, 0, new Board(this.board), this.player);
-        */
-        int depth = 7;
-        Move temp = chooseMove(depth, this.board, this.player);
         this.board.makeMove(temp, player);
         return temp;
     }
