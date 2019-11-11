@@ -82,9 +82,11 @@ public class StudentAI extends AI {
         //Move decision;
         ArrayList<Heuristic> H = new ArrayList<Heuristic>();
         int i= 0;
-        int j= 0;
         int best = 0;
         boolean max = true;
+        double a = Double.NEGATIVE_INFINITY;
+        double b = Double.POSITIVE_INFINITY;
+
 
         Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player); //gets all moves of current player's
         Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
@@ -92,6 +94,7 @@ public class StudentAI extends AI {
         while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
             Vector<Move> tmi = temp.next();
             Iterator<Move> tempMoves = tmi.iterator();
+            int j= 0;
             while(tempMoves.hasNext())
             {
                 Move tmj = tempMoves.next();
@@ -99,7 +102,9 @@ public class StudentAI extends AI {
                 try
                 {
                     tempB.makeMove(tmj, player);
-                    Heuristic newH = new Heuristic(i ,j, minimax(tempB, depth-1, nextPlayer(player), !max));
+                    double score = minimax(tempB, depth-1, nextPlayer(player), !max, a ,b);
+                    Heuristic newH = new Heuristic(i ,j, score);
+                    // System.out.println("i = " +i +" j = " +j + "move = " +tmj.toString()+ " score = "+ score);
                     H.add(newH);
                 }
                 catch(Exception e){}
@@ -110,28 +115,33 @@ public class StudentAI extends AI {
 
         for(int index = 0 ; index < H.size(); index++)
         {
-           // System.out.println(H.get(index).toString());
+            //System.out.println(H.get(index).toString());
             if(H.get(index).getscore() > H.get(best).getscore())
             {
                 best = index;
             }
         }
+        //System.out.println("choosing move");
 
+        //System.out.println("i = "+H.get(best).geti() + ", j = " +H.get(best).getj());
         return (currentPossibleMoves.get(H.get(best).geti())).get(H.get(best).getj());
     }
 
-    public double minimax(Board currBoard, int depth, int player, boolean max)
+    public double minimax(Board currBoard, int depth, int player, boolean max, double a, double b)
     {
+
         if(depth == 0)
         {
             return gamescore(currBoard, player);
         }
+
         double output = 0;
         Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player);
         Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
 
         if(max)
         {
+            output = Double.NEGATIVE_INFINITY;
             while(temp.hasNext())
             {
                 Vector<Move> tmI = temp.next();
@@ -145,13 +155,21 @@ public class StudentAI extends AI {
                         tempB.makeMove(tmJ, player);
                     }
                     catch(Exception e){}
-                    double result = minimax(tempB, depth -1, nextPlayer(player), !max);
+                    double result = minimax(tempB, depth -1, nextPlayer(player), !max, a, b);
+
                     output = Math.max(result, output);
+                    a = Math.max(a, output);
+
+                    if(a >= b)
+                    {
+                        break;
+                    }
                 }
             }
         }
         else
         {
+            output = Double.POSITIVE_INFINITY;
             while(temp.hasNext())
             {
                 Vector<Move> tmI = temp.next();
@@ -163,11 +181,16 @@ public class StudentAI extends AI {
                     Board tempB = new Board(currBoard);
                     try{
                         tempB.makeMove(tmJ, player);
-
                     }
                     catch(Exception e){}
-                    double result = minimax(tempB, depth -1, nextPlayer(player), !max);
+                    double result = minimax(tempB, depth -1, nextPlayer(player), !max, a, b);
                     output = Math.min(result, output);
+                    a = Math.min(a, output);
+
+                    if(a >= b)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -182,7 +205,6 @@ public class StudentAI extends AI {
         else{
             temp = curr.whiteCount - curr.blackCount;
         }
-
         return temp;
     }
 
@@ -200,8 +222,20 @@ public class StudentAI extends AI {
 
         }
         else{
+
+
             player = 1; // should only come here if its first move of game, therfore default first move http://www.quadibloc.com/other/bo1211.htm
 
+            //given professor's random move
+            Vector<Vector<Move>> moves = board.getAllPossibleMoves(player);
+            Random randGen = new Random();
+            int index = randGen.nextInt(moves.size());
+            int innerIndex = randGen.nextInt(moves.get(index).size());
+            Move resMove = moves.get(index).get(innerIndex);
+            board.makeMove(resMove, player);
+            return resMove;
+
+            /*
             int col;  //initial col
             int row;  //initial row
             int newcol; //new col
@@ -249,7 +283,7 @@ public class StudentAI extends AI {
         //Game.currentBoard = new Board(this.board); //creates the current node
         Move temp = chooseMove(Game, 0, new Board(this.board), this.player);
         */
-        int depth = 7;
+        int depth = 4;
         Move temp = chooseMove(depth, this.board, this.player);
         this.board.makeMove(temp, player);
         return temp;
