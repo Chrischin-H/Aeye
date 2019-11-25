@@ -16,7 +16,7 @@ public class StudentAI extends AI {
         Move Make;
         int score;
         Vector<Integer> depthScore;
-
+        int player;
         
     }
 
@@ -25,7 +25,7 @@ public class StudentAI extends AI {
     public int FSM_chooseMove(int depth,int player, Board currBoard, boolean max){
         int k = 1; //states
         //index
-        int i = -1;
+        int i = 0;
         int j = -1;
 
         int score = 0;
@@ -44,9 +44,6 @@ public class StudentAI extends AI {
                     if(temp1.hasNext()){
                         temp2 = temp1.next().iterator();
                         //System.out.println("IN 1");
-                        if(depth == this.NODE.MAX_DEPTH){
-                            i += 1;
-                        }
                         k = 2;
 
                     }
@@ -71,6 +68,7 @@ public class StudentAI extends AI {
                     else if(temp1.hasNext()){
                     
                         temp2 = temp1.next().iterator();
+                        j = -1;
 
                         if(depth == this.NODE.MAX_DEPTH){
                             i += 1;
@@ -86,7 +84,12 @@ public class StudentAI extends AI {
 
                         if(depth == this.NODE.MAX_DEPTH){// rnrn its not waiting to go here to make a move idk how its exiting but gotta check logic, its exiting and making move at 00 by default when it goes back to getmove
                             //System.out.println("i: " + this.NODE.i +" " +"j: "+ this.NODE.j);
-                            
+                            if(this.NODE.i > currentPossibleMoves.size()){
+                                this.NODE.i -= 1;
+                            }
+                            if(this.NODE.j > currentPossibleMoves.get(this.NODE.i).size()){
+                                this.NODE.j -= 1;
+                            }
                             this.NODE.Make = (currentPossibleMoves.get(this.NODE.i)).get(this.NODE.j);
                             return 0;   
                         }
@@ -128,13 +131,13 @@ public class StudentAI extends AI {
                     else{
                         score = FSM_chooseMove(depth - 1, 2, currBoard, !max);
                     }
-                    if(score == 0){
-                        k = 6;
-                    }
-                    else{
+                    // if(score == 0){
+                    //     k = 6;
+                    // }
+                    // else{
                          k = 5;
                          this.NODE.depthScore.add(score);
-                    }
+                    //}
                     break;
                 }
                 case 5:{
@@ -148,9 +151,10 @@ public class StudentAI extends AI {
                     if(max){
                         //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
 
-                        if(this.NODE.score < Collections.max(this.NODE.depthScore)){
+                        if(this.NODE.score > Collections.max(this.NODE.depthScore)){
                             if(depth == this.NODE.MAX_DEPTH){
-                                System.out.println("new i: " + i + "new j: " + j);
+                                //System.out.println("new i: " + i + "new j: " + j);
+                                //if(j > currentPossibleMoves){}
                                 this.NODE.i = i;
                                 this.NODE.j = j;
                             }
@@ -158,7 +162,7 @@ public class StudentAI extends AI {
                         }
                     }
                     else{
-                        if(this.NODE.score > Collections.min(this.NODE.depthScore)){
+                        if(this.NODE.score < Collections.min(this.NODE.depthScore)){
                                 this.NODE.score = Collections.min(this.NODE.depthScore);
                         }
                     }
@@ -177,52 +181,62 @@ public class StudentAI extends AI {
 
     
     public int gamescore(Board curr, int player){
-        int bonusPoints = 0;
+        
+        int x = curr.isWin(this.NODE.player);
+        int bonusPoints = x == 1 || x == -1 ? 9999: 0;
         int temp = 0;
         Board.Saved_Move lastMove = curr.saved_move_list.get(curr.saved_move_list.size() - 1);
-        if(player == 1){ //starts at 2nd row -> y > size(row) - 4 //check if isking already, if so points are normal
+        bonusPoints = lastMove.made_move.isCapture ? bonusPoints + 4 : bonusPoints;
+        bonusPoints = lastMove.become_king ? bonusPoints + 4 : bonusPoints;
+        if(this.NODE.player == 1){ //starts at 2nd row -> y > size(row) - 4 //check if isking already, if so points are normal
 
-            if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
-                if(lastMove.made_move.isCapture){
-                    bonusPoints = 3;
-                }
-                return (curr.blackCount - curr.whiteCount) + bonusPoints;
+            // if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
+            //     if(lastMove.made_move.isCapture){
+            //         bonusPoints = 3;
+            //     }
+            //     return (curr.blackCount - curr.whiteCount) + bonusPoints;
 
-            }
-            else{
-                if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y > (curr.row - 4)){
-                    bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
+            // }
+            // else{
+            //     if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y > (curr.row - 4)){
+            //         bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
                     
-                }
-            }
-            if(lastMove.made_move.isCapture){
-                bonusPoints += 3;
-            }
-            temp = (curr.blackCount - curr.whiteCount) + bonusPoints;
+            //     }
+            // }
+            // if(lastMove.made_move.isCapture){
+            //     bonusPoints += 3;
+            // }
+            // if(curr.blackCount <= 5){
+            //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
+            // }
+            temp = ((curr.blackCount - curr.whiteCount) * 3) + bonusPoints;
             
         }
         else{//starts at [size(row) - 2] -> y < 4 , row = 0 , 1 , ..... last 3 rows are more points
             
-            if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
+            // if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
                 
-                return (curr.whiteCount - curr.blackCount);
+            //     return (curr.whiteCount - curr.blackCount);
 
-            }
-            else{
-                if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y < 4){
-                    bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
-                }
+            // }
+            // else{
+            //     if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y < 4){
+            //         bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
+            //     }
 
-            }   
-            if(lastMove.made_move.isCapture){
-                bonusPoints += 3;
-            } 
-                temp = (curr.whiteCount - curr.blackCount) + bonusPoints;
+            // }   
+            // if(lastMove.made_move.isCapture){
+            //     bonusPoints += 3;
+            // } 
+            // if(curr.whiteCount <= 5){
+            //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
+            // }
+                 temp = ((curr.whiteCount - curr.blackCount)* 3) + bonusPoints;
         }
  //  Vector<Saved_Move> saved_move_list = new Vector<Saved_Move>(); check size() -1 to see if last move became king / made a move with a position close to becoming king
  //use condition statement to see which side of board is of interest  
-
-
+        
+        
         return temp;
     }
 
@@ -254,9 +268,15 @@ public class StudentAI extends AI {
             board.makeMove(resMove, player);
             return resMove;
         }
-
+        if(this.board.col == 9){
+            this.NODE.MAX_DEPTH = 4;
+        }
+        else{
+            this.NODE.MAX_DEPTH = 5;
+        }
         this.NODE.depthScore = new Vector<Integer>();
-        this.NODE.MAX_DEPTH = 6;
+        this.NODE.player = player;
+        //this.NODE.MAX_DEPTH = 5;
         this.NODE.MAX = true;
         FSM_chooseMove(this.NODE.MAX_DEPTH, player, this.board, this.NODE.MAX);
         this.board.makeMove(this.NODE.Make, player);
