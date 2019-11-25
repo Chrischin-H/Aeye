@@ -14,9 +14,7 @@ public class StudentAI extends AI {
         Boolean MAX;
         Move Make;
         int score;
-        Vector<Iterator<Vector<Move>>> temp1;
-        Vector<Iterator<Move>> temp2; 
-        Vector<Move> temp3; 
+
         
     }
 
@@ -31,40 +29,45 @@ public class StudentAI extends AI {
         int score = 0;
         
         Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player); ;
-
+        Iterator<Vector<Move>> temp1 = null;
+        Iterator<Move> temp2 = null ;
+        Move temp3 = null; 
         
 
         while(true){
             switch(k){
                 case 1:{ 
 
-                    this.NODE.temp1.add(currentPossibleMoves.iterator());
-                    if(this.NODE.temp1.get(this.NODE.temp1.size() - 1).hasNext()){
-                        this.NODE.temp2.add(this.NODE.temp1.get(this.NODE.temp1.size() - 1).next().iterator());
-                        System.out.println("IN 1");
+                    temp1 = currentPossibleMoves.iterator();
+                    if(temp1.hasNext()){
+                        temp2 = temp1.next().iterator();
+                        //System.out.println("IN 1");
                         if(depth == this.NODE.MAX_DEPTH){
                             i += 1;
                         }
 
+                    }
+                    else{
+                        return 0;
                     }
                     k = 2;
                     break;
                 }
                 case 2:{  
  
-                    if(this.NODE.temp2.get(this.NODE.temp2.size() - 1).hasNext()){
-                        System.out.println("IN 2");
-                        this.NODE.temp3.add((this.NODE.temp2.get(this.NODE.temp2.size() - 1).next()));
-                        System.out.println(this.NODE.temp3.get(this.NODE.temp3.size() - 1).seq.get(0));
+                    if(temp2.hasNext()){
+                        //System.out.println("IN 2");
+                        temp3 = temp2.next();
+                        //System.out.println(this.NODE.temp3.get(this.NODE.temp3.size() - 1).seq.get(0));
                         if(depth == this.NODE.MAX_DEPTH){
                             j += 1;
                         }
                         k = 3;
-                        
+                        break;
                     }
-                    else if(this.NODE.temp1.get(this.NODE.temp1.size() - 1).hasNext()){
-                        this.NODE.temp2.remove(this.NODE.temp2.size() - 1);
-                        this.NODE.temp2.add(this.NODE.temp1.get(this.NODE.temp1.size() - 1).next().iterator());
+                    else if(temp1.hasNext()){
+                    
+                        temp2 = temp1.next().iterator();
 
                         if(depth == this.NODE.MAX_DEPTH){
                             i += 1;
@@ -74,21 +77,26 @@ public class StudentAI extends AI {
                             
                     }
                     else{
-                        if(depth == this.NODE.MAX_DEPTH){
+                       // System.out.println(this.NODE.temp3.get(this.NODE.temp3.size()-1).toString() + "in 3");
+                       
+                        
+
+                        if(depth == this.NODE.MAX_DEPTH){// rnrn its not waiting to go here to make a move idk how its exiting but gotta check logic, its exiting and making move at 00 by default when it goes back to getmove
+                            //System.out.println("i: " + this.NODE.i +" " +"j: "+ this.NODE.j);
                             this.NODE.Make = (currentPossibleMoves.get(this.NODE.i)).get(this.NODE.j);
                             
                         }
                         return score; 
                     }
                    
-                    break;
+                    
                 }
                 case 3:{
                     
                     try{
 
-                        System.out.println(this.NODE.temp3.get(this.NODE.temp3.size()-1));
-                        currBoard.makeMove(this.NODE.temp3.get(this.NODE.temp3.size() - 1), player);
+                        //System.out.println(this.NODE.temp3.get(this.NODE.temp3.size()-1).toString());
+                        currBoard.makeMove(temp3, player);
                         k = 4;
 
                     }
@@ -101,21 +109,15 @@ public class StudentAI extends AI {
                     break;
                 }
                 case 4:{
-                    System.out.println("in 4");
+                    //System.out.println("in 4");
 
                     if(player == 2){
-                        player = 1;
+                        score = FSM_chooseMove(depth - 1, 1, currBoard, !max);
                     }
                     else{
-                        player = 2;
+                        score = FSM_chooseMove(depth - 1, 2, currBoard, !max);
                     }
                     
-                    score = FSM_chooseMove(depth - 1, player, currBoard, !max);
-                    
-                    this.NODE.temp1.remove(this.NODE.temp1.size() - 1);
-                    this.NODE.temp2.remove(this.NODE.temp2.size() - 1);
-                    this.NODE.temp3.remove(this.NODE.temp3.size() - 1);
-
                     k = 5;
                     
                     break;
@@ -127,8 +129,11 @@ public class StudentAI extends AI {
                     }
                 
                     if(max){
+                        //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
+
                         if(this.NODE.score < score){
                             if(depth == this.NODE.MAX_DEPTH){
+                                System.out.println("new i: " + i + "new j: " + j);
                                 this.NODE.i = i;
                                 this.NODE.j = j;
                             }
@@ -225,11 +230,8 @@ public class StudentAI extends AI {
             return resMove;
         }
 
-        this.NODE.temp1 = new Vector<Iterator<Vector<Move>>>();
-        this.NODE.temp2 = new Vector<Iterator<Move>>();
-        this.NODE.temp3 = new Vector<Move>();
 
-        this.NODE.MAX_DEPTH = 4;
+        this.NODE.MAX_DEPTH = 6;
         this.NODE.MAX = true;
         FSM_chooseMove(this.NODE.MAX_DEPTH, player, this.board, this.NODE.MAX);
         this.board.makeMove(this.NODE.Make, player);
