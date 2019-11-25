@@ -3,6 +3,7 @@ import java.util.Random;
 import java.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class StudentAI extends AI {
@@ -14,6 +15,7 @@ public class StudentAI extends AI {
         Boolean MAX;
         Move Make;
         int score;
+        Vector<Integer> depthScore;
 
         
     }
@@ -45,12 +47,13 @@ public class StudentAI extends AI {
                         if(depth == this.NODE.MAX_DEPTH){
                             i += 1;
                         }
+                        k = 2;
 
                     }
                     else{
                         return 0;
                     }
-                    k = 2;
+                    
                     break;
                 }
                 case 2:{  
@@ -83,10 +86,17 @@ public class StudentAI extends AI {
 
                         if(depth == this.NODE.MAX_DEPTH){// rnrn its not waiting to go here to make a move idk how its exiting but gotta check logic, its exiting and making move at 00 by default when it goes back to getmove
                             //System.out.println("i: " + this.NODE.i +" " +"j: "+ this.NODE.j);
-                            this.NODE.Make = (currentPossibleMoves.get(this.NODE.i)).get(this.NODE.j);
                             
+                            this.NODE.Make = (currentPossibleMoves.get(this.NODE.i)).get(this.NODE.j);
+                            return 0;   
                         }
-                        return score; 
+                        else if(depth == 0){
+                            return score;
+                        }
+                        else{
+                            return this.NODE.score;
+                        }
+                         
                     }
                    
                     
@@ -113,36 +123,43 @@ public class StudentAI extends AI {
 
                     if(player == 2){
                         score = FSM_chooseMove(depth - 1, 1, currBoard, !max);
+
                     }
                     else{
                         score = FSM_chooseMove(depth - 1, 2, currBoard, !max);
                     }
-                    
-                    k = 5;
-                    
+                    if(score == 0){
+                        k = 6;
+                    }
+                    else{
+                         k = 5;
+                         this.NODE.depthScore.add(score);
+                    }
                     break;
                 }
                 case 5:{
                     
                     if(depth == 0){
                         score = gamescore(currBoard, player);
+                        k = 6;
+                        break;
                     }
                 
                     if(max){
                         //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
 
-                        if(this.NODE.score < score){
+                        if(this.NODE.score < Collections.max(this.NODE.depthScore)){
                             if(depth == this.NODE.MAX_DEPTH){
                                 System.out.println("new i: " + i + "new j: " + j);
                                 this.NODE.i = i;
                                 this.NODE.j = j;
                             }
-                            this.NODE.score = score;
+                            this.NODE.score = Collections.max(this.NODE.depthScore);
                         }
                     }
                     else{
-                        if(this.NODE.score > score){
-                                this.NODE.score = score;
+                        if(this.NODE.score > Collections.min(this.NODE.depthScore)){
+                                this.NODE.score = Collections.min(this.NODE.depthScore);
                         }
                     }
                     k = 6;
@@ -166,8 +183,10 @@ public class StudentAI extends AI {
         if(player == 1){ //starts at 2nd row -> y > size(row) - 4 //check if isking already, if so points are normal
 
             if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
-                
-                return (curr.blackCount - curr.whiteCount);
+                if(lastMove.made_move.isCapture){
+                    bonusPoints = 3;
+                }
+                return (curr.blackCount - curr.whiteCount) + bonusPoints;
 
             }
             else{
@@ -175,6 +194,9 @@ public class StudentAI extends AI {
                     bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
                     
                 }
+            }
+            if(lastMove.made_move.isCapture){
+                bonusPoints += 3;
             }
             temp = (curr.blackCount - curr.whiteCount) + bonusPoints;
             
@@ -191,7 +213,10 @@ public class StudentAI extends AI {
                     bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
                 }
 
-            }    
+            }   
+            if(lastMove.made_move.isCapture){
+                bonusPoints += 3;
+            } 
                 temp = (curr.whiteCount - curr.blackCount) + bonusPoints;
         }
  //  Vector<Saved_Move> saved_move_list = new Vector<Saved_Move>(); check size() -1 to see if last move became king / made a move with a position close to becoming king
@@ -230,7 +255,7 @@ public class StudentAI extends AI {
             return resMove;
         }
 
-
+        this.NODE.depthScore = new Vector<Integer>();
         this.NODE.MAX_DEPTH = 6;
         this.NODE.MAX = true;
         FSM_chooseMove(this.NODE.MAX_DEPTH, player, this.board, this.NODE.MAX);
