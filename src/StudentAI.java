@@ -97,6 +97,7 @@ public class StudentAI extends AI {
                         }
                         else if(depth == 0){
                             this.NODE.zScore.clear();
+
                             return this.NODE.score;
                         }
                         else{
@@ -291,6 +292,7 @@ public class StudentAI extends AI {
             this.NODE.MAX_DEPTH = 5;
         }
         this.NODE.depthScore = new Vector<Integer>();
+        this.NODE.zScore = new Vector<Integer>();
         this.NODE.player = player;
         //this.NODE.MAX_DEPTH = 5;
         this.NODE.MAX = true;
