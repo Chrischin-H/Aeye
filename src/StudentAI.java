@@ -16,6 +16,8 @@ public class StudentAI extends AI {
         Move Make;
         int score;
         Vector<Integer> depthScore;
+        Vector<Integer> zScore;
+        
         int player;
         
     }
@@ -94,7 +96,8 @@ public class StudentAI extends AI {
                             return 0;   
                         }
                         else if(depth == 0){
-                            return score;
+                            this.NODE.zScore.clear();
+                            return this.NODE.score;
                         }
                         else{
                             return this.NODE.score;
@@ -143,15 +146,27 @@ public class StudentAI extends AI {
                 case 5:{
                     
                     if(depth == 0){
-                        score = gamescore(currBoard, player);
+                        this.NODE.zScore.add(gamescore(currBoard, player));
                         k = 6;
+                        if(max){
+                            //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
+                            if(this.NODE.score < Collections.max(this.NODE.zScore)){
+
+                                this.NODE.score = Collections.max(this.NODE.zScore);
+                            }
+                        }
+                        else{
+                            if(this.NODE.score > Collections.min(this.NODE.zScore)){
+                                    this.NODE.score = Collections.min(this.NODE.zScore);
+                            }
+                        }
                         break;
                     }
                 
                     if(max){
                         //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
 
-                        if(this.NODE.score > Collections.max(this.NODE.depthScore)){
+                        if(this.NODE.score < Collections.max(this.NODE.depthScore)){
                             if(depth == this.NODE.MAX_DEPTH){
                                 //System.out.println("new i: " + i + "new j: " + j);
                                 //if(j > currentPossibleMoves){}
@@ -162,7 +177,7 @@ public class StudentAI extends AI {
                         }
                     }
                     else{
-                        if(this.NODE.score < Collections.min(this.NODE.depthScore)){
+                        if(this.NODE.score > Collections.min(this.NODE.depthScore)){
                                 this.NODE.score = Collections.min(this.NODE.depthScore);
                         }
                     }
@@ -183,11 +198,12 @@ public class StudentAI extends AI {
     public int gamescore(Board curr, int player){
         
         int x = curr.isWin(this.NODE.player);
-        int bonusPoints = x == 1 || x == -1 ? 9999: 0;
+        int bonusPoints = x == 1 ? 9999: 0;
+        bonusPoints += x == -1 ? 7777 : 0;
         int temp = 0;
         Board.Saved_Move lastMove = curr.saved_move_list.get(curr.saved_move_list.size() - 1);
-        bonusPoints = lastMove.made_move.isCapture ? bonusPoints + 4 : bonusPoints;
-        bonusPoints = lastMove.become_king ? bonusPoints + 4 : bonusPoints;
+        bonusPoints = lastMove.made_move.isCapture ? bonusPoints + 400 : bonusPoints;
+        bonusPoints = lastMove.become_king ? bonusPoints + 200 : bonusPoints;
         if(this.NODE.player == 1){ //starts at 2nd row -> y > size(row) - 4 //check if isking already, if so points are normal
 
             // if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
@@ -209,7 +225,7 @@ public class StudentAI extends AI {
             // if(curr.blackCount <= 5){
             //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
             // }
-            temp = ((curr.blackCount - curr.whiteCount) * 3) + bonusPoints;
+            temp = ((curr.blackCount - curr.whiteCount) * 99) + bonusPoints;
             
         }
         else{//starts at [size(row) - 2] -> y < 4 , row = 0 , 1 , ..... last 3 rows are more points
@@ -231,7 +247,7 @@ public class StudentAI extends AI {
             // if(curr.whiteCount <= 5){
             //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
             // }
-                 temp = ((curr.whiteCount - curr.blackCount)* 3) + bonusPoints;
+                 temp = ((curr.whiteCount - curr.blackCount)* 99) + bonusPoints;
         }
  //  Vector<Saved_Move> saved_move_list = new Vector<Saved_Move>(); check size() -1 to see if last move became king / made a move with a position close to becoming king
  //use condition statement to see which side of board is of interest  
