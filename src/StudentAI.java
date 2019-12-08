@@ -1,259 +1,210 @@
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Vector;
-
 import java.util.ArrayList;
-import java.util.Collections;
 
+// The following part should be completed by students.
+// Students can modify anything except the class name and exisiting functions and varibles.
+
+
+
+
+//during the recursion when predicting the move of the opponent,
+//our ai will predict that the opponent will choose a move that makes them be the ones winning
+
+//our ai will try and choose the move that will put us in the lead 7 turns later(so it might bait the opponent and stuff idk)
+//but if you have a better idea let me know idk I just thought this would be really good and not so hard to do
 
 public class StudentAI extends AI {
-    
     public class Node{
+        // Board currentBoard; //current state of board
+        //Vector<Vector<Move>> currentPossibleMoves; //current possible moves for player's turn
+        int GameScore; // game score at the end of each recurrsion: [currPlayer # of pieces ] - [Opponent # pieces] --> use absolute value of GameScore to decide which move to go with
+        //int depth; // the current depth, [depth  += 1] ---> once each player has made a move in the tree and resets after each iteration of currentPossibleMoves in the root node
+        int depthMax; // max depth of recurssion
+        int i; //keeps track of which
         int j;
+        Boolean MakeMove;
+        //int currplayersMove; // keeps track of whos turn
+        int trueplayersmove; // Aeye true player#
+    }
+    public class Heuristic
+    {
         int i;
-        int MAX_DEPTH;
-        Boolean MAX;
-        Move Make;
-        int score;
-        Vector<Integer> depthScore;
-        Vector<Integer> zScore;
-        
-        int player;
-        
+        int j;
+        double score;
+
+        public Heuristic (int i, int j, double score)
+        {
+            this.i = i;
+            this.j = j;
+            this.score = score;
+        }
+        public double getscore()
+        {
+            return this.score;
+        }
+        public int geti()
+        {
+            return this.i;
+        }
+        public int getj()
+        {
+            return this.j;
+        }
+        public String toString()
+        {
+            String str = new String();
+            str += "i = ";
+            str += this.i;
+            str += ", j = ";
+            str += this.j;
+            str += ", score = ";
+            str += this.score;
+
+            return str;
+
+        }
+    }
+    public int nextPlayer(int i)
+    {
+        if(i == 1)
+        {
+            return 2;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    //how to choose next move using recurrsion
+    public Move chooseMove(int depth, Board currBoard, int player){
+        //Move decision;
+        ArrayList<Heuristic> H = new ArrayList<Heuristic>();
+        int i= 0;
+        int best = 0;
+        boolean max = true;
+        double a = Double.NEGATIVE_INFINITY;
+        double b = Double.POSITIVE_INFINITY;
+
+
+        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player); //gets all moves of current player's
+        Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
+
+        while(temp.hasNext()){// iterates through all the vectors in curr.currentPossibleMoves
+            Vector<Move> tmi = temp.next();
+            Iterator<Move> tempMoves = tmi.iterator();
+            int j= 0;
+            while(tempMoves.hasNext())
+            {
+                Move tmj = tempMoves.next();
+                Board tempB = new Board(currBoard);
+                try
+                {
+                    tempB.makeMove(tmj, player);
+                    double score = minimax(tempB, depth-1, nextPlayer(player), !max, a ,b);
+                    Heuristic newH = new Heuristic(i ,j, score);
+                    // System.out.println("i = " +i +" j = " +j + "move = " +tmj.toString()+ " score = "+ score);
+                    H.add(newH);
+                }
+                catch(Exception e){}
+                j++;
+            }
+            i++;
+        }
+
+        for(int index = 0 ; index < H.size(); index++)
+        {
+            //System.out.println(H.get(index).toString());
+            if(H.get(index).getscore() > H.get(best).getscore())
+            {
+                best = index;
+            }
+        }
+        //System.out.println("choosing move");
+
+        //System.out.println("i = "+H.get(best).geti() + ", j = " +H.get(best).getj());
+        return (currentPossibleMoves.get(H.get(best).geti())).get(H.get(best).getj());
     }
 
-    Node NODE;
-    //how to choose next move using recurrsion
-    public int FSM_chooseMove(int depth,int player, Board currBoard, boolean max){
-        int k = 1; //states
-        //index
-        int i = 0;
-        int j = -1;
+    public double minimax(Board currBoard, int depth, int player, boolean max, double a, double b)
+    {
 
-        int score = 0;
-        
-        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player); ;
-        Iterator<Vector<Move>> temp1 = null;
-        Iterator<Move> temp2 = null ;
-        Move temp3 = null; 
-        
+        if(depth == 0)
+        {
+            return gamescore(currBoard, player);
+        }
 
-        while(true){
-            switch(k){
-                case 1:{ 
+        double output = 0;
+        Vector<Vector<Move>> currentPossibleMoves = currBoard.getAllPossibleMoves(player);
+        Iterator<Vector<Move>> temp = currentPossibleMoves.iterator();
 
-                    temp1 = currentPossibleMoves.iterator();
-                    if(temp1.hasNext()){
-                        temp2 = temp1.next().iterator();
-                        //System.out.println("IN 1");
-                        k = 2;
+        if(max)
+        {
+            output = Double.NEGATIVE_INFINITY;
+            while(temp.hasNext())
+            {
+                Vector<Move> tmI = temp.next();
+                Iterator<Move> tempMoves = tmI.iterator();
 
+                while(tempMoves.hasNext())
+                { // iterates through elements inside the vector that the first iterator gave
+                    Move tmJ = tempMoves.next();
+                    Board tempB = new Board(currBoard);
+                    try {
+                        tempB.makeMove(tmJ, player);
                     }
-                    else{
-                        return 0;
-                    }
-                    
-                    break;
-                }
-                case 2:{  
- 
-                    if(temp2.hasNext()){
-                        //System.out.println("IN 2");
-                        temp3 = temp2.next();
-                        //System.out.println(this.NODE.temp3.get(this.NODE.temp3.size() - 1).seq.get(0));
-                        if(depth == this.NODE.MAX_DEPTH){
-                            j += 1;
-                        }
-                        k = 3;
-                        break;
-                    }
-                    else if(temp1.hasNext()){
-                    
-                        temp2 = temp1.next().iterator();
-                        j = -1;
-
-                        if(depth == this.NODE.MAX_DEPTH){
-                            i += 1;
-                        }
-                        k = 2;
-                        break;
-                            
-                    }
-                    else{
-                       // System.out.println(this.NODE.temp3.get(this.NODE.temp3.size()-1).toString() + "in 3");
-                       
-                        
-
-                        if(depth == this.NODE.MAX_DEPTH){// rnrn its not waiting to go here to make a move idk how its exiting but gotta check logic, its exiting and making move at 00 by default when it goes back to getmove
-                            //System.out.println("i: " + this.NODE.i +" " +"j: "+ this.NODE.j);
-                            if(this.NODE.i > currentPossibleMoves.size()){
-                                this.NODE.i -= 1;
-                            }
-                            if(this.NODE.j > currentPossibleMoves.get(this.NODE.i).size()){
-                                this.NODE.j -= 1;
-                            }
-                            this.NODE.Make = (currentPossibleMoves.get(this.NODE.i)).get(this.NODE.j);
-                            return 0;   
-                        }
-                        else if(depth == 0){
-                            this.NODE.zScore.clear();
-
-                            return this.NODE.score;
-                        }
-                        else{
-                            return this.NODE.score;
-                        }
-                         
-                    }
-                   
-                    
-                }
-                case 3:{
-                    
-                    try{
-
-                        //System.out.println(this.NODE.temp3.get(this.NODE.temp3.size()-1).toString());
-                        currBoard.makeMove(temp3, player);
-                        k = 4;
-
-                    }
-
                     catch(Exception e){}
-                    
-                    if(depth == 0){
-                        k = 5;
-                    }
-                    break;
-                }
-                case 4:{
-                    //System.out.println("in 4");
+                    double result = minimax(tempB, depth -1, nextPlayer(player), !max, a, b);
 
-                    if(player == 2){
-                        score = FSM_chooseMove(depth - 1, 1, currBoard, !max);
+                    output = Math.max(result, output);
+                    a = Math.max(a, output);
 
-                    }
-                    else{
-                        score = FSM_chooseMove(depth - 1, 2, currBoard, !max);
-                    }
-                    // if(score == 0){
-                    //     k = 6;
-                    // }
-                    // else{
-                         k = 5;
-                         this.NODE.depthScore.add(score);
-                    //}
-                    break;
-                }
-                case 5:{
-                    
-                    if(depth == 0){
-                        this.NODE.zScore.add(gamescore(currBoard, player));
-                        k = 6;
-                        if(max){
-                            //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
-                            if(this.NODE.score < Collections.max(this.NODE.zScore)){
-
-                                this.NODE.score = Collections.max(this.NODE.zScore);
-                            }
-                        }
-                        else{
-                            if(this.NODE.score > Collections.min(this.NODE.zScore)){
-                                    this.NODE.score = Collections.min(this.NODE.zScore);
-                            }
-                        }
+                    if(a >= b)
+                    {
                         break;
                     }
-                
-                    if(max){
-                        //System.out.println("Depth: " + depth + "|| Node Score: " + this.NODE.score +" || Score: "+ score);
-
-                        if(this.NODE.score < Collections.max(this.NODE.depthScore)){
-                            if(depth == this.NODE.MAX_DEPTH){
-                                //System.out.println("new i: " + i + "new j: " + j);
-                                //if(j > currentPossibleMoves){}
-                                this.NODE.i = i;
-                                this.NODE.j = j;
-                            }
-                            this.NODE.score = Collections.max(this.NODE.depthScore);
-                        }
-                    }
-                    else{
-                        if(this.NODE.score > Collections.min(this.NODE.depthScore)){
-                                this.NODE.score = Collections.min(this.NODE.depthScore);
-                        }
-                    }
-                    k = 6;
-                    break;
-                }
-                case 6:{
-                    currBoard.Undo();
-
-                    k = 2;
-                    break;
                 }
             }
         }
+        else
+        {
+            output = Double.POSITIVE_INFINITY;
+            while(temp.hasNext())
+            {
+                Vector<Move> tmI = temp.next();
+                Iterator<Move> tempMoves = tmI.iterator();
+
+                while(tempMoves.hasNext())
+                { // iterates through elements inside the vector that the first iterator gave
+                    Move tmJ = tempMoves.next();
+                    Board tempB = new Board(currBoard);
+                    try{
+                        tempB.makeMove(tmJ, player);
+                    }
+                    catch(Exception e){}
+                    double result = minimax(tempB, depth -1, nextPlayer(player), !max, a, b);
+                    output = Math.min(result, output);
+                    a = Math.min(a, output);
+
+                    if(a >= b)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        return output;
     }
 
-    
     public int gamescore(Board curr, int player){
-        
-        int x = curr.isWin(this.NODE.player);
-        int bonusPoints = x == 1 ? 9999: 0;
-        bonusPoints += x == -1 ? 7777 : 0;
         int temp = 0;
-        Board.Saved_Move lastMove = curr.saved_move_list.get(curr.saved_move_list.size() - 1);
-        bonusPoints = lastMove.made_move.isCapture ? bonusPoints + 400 : bonusPoints;
-        bonusPoints = lastMove.become_king ? bonusPoints + 200 : bonusPoints;
-        if(this.NODE.player == 1){ //starts at 2nd row -> y > size(row) - 4 //check if isking already, if so points are normal
-
-            // if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
-            //     if(lastMove.made_move.isCapture){
-            //         bonusPoints = 3;
-            //     }
-            //     return (curr.blackCount - curr.whiteCount) + bonusPoints;
-
-            // }
-            // else{
-            //     if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y > (curr.row - 4)){
-            //         bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
-                    
-            //     }
-            // }
-            // if(lastMove.made_move.isCapture){
-            //     bonusPoints += 3;
-            // }
-            // if(curr.blackCount <= 5){
-            //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
-            // }
-            temp = ((curr.blackCount - curr.whiteCount) * 99) + bonusPoints;
-            
+        if(player == 1){
+            temp = curr.blackCount - curr.whiteCount;
         }
-        else{//starts at [size(row) - 2] -> y < 4 , row = 0 , 1 , ..... last 3 rows are more points
-            
-            // if((curr.board.get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y)).get(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).x).isKing && !lastMove.become_king){
-                
-            //     return (curr.whiteCount - curr.blackCount);
-
-            // }
-            // else{
-            //     if(lastMove.made_move.seq.get(lastMove.made_move.seq.size() - 1).y < 4){
-            //         bonusPoints = (lastMove.become_king) ? 5 : 3; //if last move became king and 
-            //     }
-
-            // }   
-            // if(lastMove.made_move.isCapture){
-            //     bonusPoints += 3;
-            // } 
-            // if(curr.whiteCount <= 5){
-            //     bonusPoints = lastMove.made_move.isCapture ? 3 : 0;
-            // }
-                 temp = ((curr.whiteCount - curr.blackCount)* 99) + bonusPoints;
+        else{
+            temp = curr.whiteCount - curr.blackCount;
         }
- //  Vector<Saved_Move> saved_move_list = new Vector<Saved_Move>(); check size() -1 to see if last move became king / made a move with a position close to becoming king
- //use condition statement to see which side of board is of interest  
-        
-        
         return temp;
     }
 
@@ -263,7 +214,6 @@ public class StudentAI extends AI {
         this.board = new Board(col, row, k);
         this.board.initializeGame();
         this.player = 2;
-        this.NODE = new Node();
     }
 
     public Move GetMove(Move move) throws InvalidMoveError {
@@ -284,20 +234,14 @@ public class StudentAI extends AI {
             Move resMove = moves.get(index).get(innerIndex);
             board.makeMove(resMove, player);
             return resMove;
+
+
         }
-        if(this.board.col == 9){
-            this.NODE.MAX_DEPTH = 4;
-        }
-        else{
-            this.NODE.MAX_DEPTH = 5;
-        }
-        this.NODE.depthScore = new Vector<Integer>();
-        this.NODE.zScore = new Vector<Integer>();
-        this.NODE.player = player;
-        //this.NODE.MAX_DEPTH = 5;
-        this.NODE.MAX = true;
-        FSM_chooseMove(this.NODE.MAX_DEPTH, player, this.board, this.NODE.MAX);
-        this.board.makeMove(this.NODE.Make, player);
-        return this.NODE.Make;
+
+        
+        int depth = 4;
+        Move temp = chooseMove(depth, this.board, this.player);
+        this.board.makeMove(temp, player);
+        return temp;
     }
 }
